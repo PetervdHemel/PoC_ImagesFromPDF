@@ -2,17 +2,20 @@ from io import BytesIO
 from pikepdf import Pdf, PdfError, PdfImage
 from PIL import Image
 import logging
+from base64 import b64encode
+import json
 
 
 def save_images(bytes_list: list[bytes]):
     if bytes_list:
-        print("Saving image(s)...")
-
+        print("Encoding bytes and dumping to json file...")
         for count, bytes in enumerate(bytes_list):
-            stream = BytesIO(bytes)
-            name: str = f".\imgs\img{count}.png"
-            with Image.open(stream, mode="r") as image:
-                image.save(name, format="PNG")
+            _obj = b64encode(bytes)
+            data = [_obj.decode('utf-8')]
+            
+            with open(f".\data\myfile-{count}.json", "w") as f:
+                json.dump(data, f)
+                
 
 
 def convert_images(images: list[PdfImage]) -> list[bytes]:

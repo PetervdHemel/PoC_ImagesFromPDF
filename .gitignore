@@ -10,3 +10,4 @@ venv/
 *.pdf
 pg*
 img*
+*.json
