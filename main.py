@@ -1,34 +1,58 @@
+from io import BytesIO
 from pikepdf import Pdf, PdfError, PdfImage
+from PIL import Image
 import logging
 
 
-def save_images(images: dict):
-    if images:
+def save_images(bytes_list: list[bytes]):
+    if bytes_list:
         print("Saving image(s)...")
-        for image_name, image in images.items():
-            image.extract_to(fileprefix=image_name)
+
+        for count, bytes in enumerate(bytes_list):
+            stream = BytesIO(bytes)
+            name: str = f".\imgs\img{count}.png"
+            with Image.open(stream, mode="r") as image:
+                image.save(name, format="PNG")
+
+
+def convert_images(images: list[PdfImage]) -> list[bytes]:
+    if images:
+        images_as_bytes = []
+        img_bytes_io = BytesIO()
+
+        print("Converting image(s) to bytes...")
+        for image in images:
+
+            image = image.as_pil_image()
+            image.save(img_bytes_io, format="PNG")
+
+            images_as_bytes.append(img_bytes_io.getvalue())
+
+        return images_as_bytes
+
     else:
         print("Pdf contains no images.")
 
 
-def extract_images(pdf: Pdf) -> dict({str: PdfImage}):
-    images = {}
+def extract_images(pdf: Pdf) -> list[PdfImage]:
+    images = []
     print("Extracting image(s)...")
-    for page_number, page in enumerate(pdf.pages):
-        for image_number, image_key in enumerate(page.images.keys()):
+    for page in pdf.pages:
+        for image_key in page.images.keys():
             raw_img = page.images[image_key]
             pdf_img = PdfImage(raw_img)
-            dict_key: str = f".\imgs\pg{page_number}_{image_number}"
-            images.update({dict_key: pdf_img})
+            images.append(pdf_img)
 
     return images
 
 
-def open_pdf(path: str):
+def open_pdf(path: str) -> list[bytes]:
+    print("Opening Pdf...")
     try:
         with Pdf.open(path) as pdf:
-            images: dict = extract_images(pdf)
-            save_images(images)
+            images: list = extract_images(pdf)
+            images_as_bytes: list = convert_images(images)
+            return images_as_bytes
 
     except FileNotFoundError as e:
         logging.warning(f"File not found:\n{e}")
@@ -37,10 +61,11 @@ def open_pdf(path: str):
 
 
 def main():
-    path_to_pdf: str = r".\pdfs\msi-kombustor-technical-guide.pdf"
+    path_to_pdf = r".\pdfs\msi-kombustor-technical-guide.pdf"
 
-    print("Opening Pdf...")
-    open_pdf(path_to_pdf)
+    bytes_list = open_pdf(path_to_pdf)
+
+    save_images(bytes_list)
 
 
 if __name__ == main():
