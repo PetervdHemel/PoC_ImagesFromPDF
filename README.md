@@ -5,6 +5,7 @@
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
 ## Installation
+
 Make sure you have [Python 3.10](https://www.python.org/downloads/) installed.
 
 > **Python 3.11 as of now is not yet supported by pikepdf.**
